@@ -81,11 +81,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Predict anomalies in car driving.')
     parser.add_argument('--model-type', default='linear',
                         help='Type of the model for predicting. Should be "linear" or "non-linear".')
-    parser.add_argument('--model-file',
+    parser.add_argument('--model-file', required=True,
                         help='Path to the file with model. Model have to be saved in the pickle file.')
-    parser.add_argument('--file',
+    parser.add_argument('--file', required=True,
                         help='Path to the file with data.')
-    parser.add_argument('--saving-path',
+    parser.add_argument('--saving-path', required=True,
                         help='Path for saving file with predict.')
     parser.add_argument('--window-length-accelerometer', type=int, default=51,
                         help='Window length for filtering accelerometer values.')
