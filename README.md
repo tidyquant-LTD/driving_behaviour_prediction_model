@@ -18,6 +18,7 @@ jupyter notebook
 ```
 Firstly you have to run all cells in the file ***data_accelerometer_gyroscope.ipynb***.
 <br>By running all the cells in this file you will transform data format to train the model.
+<br>After this create folder models in the root of this repository.
 <br>Then you have to run all cells in the ***driving_anomalies_clf_accelerometer_gyroscope.ipynb***.
 <br>By running all the cells in this file you will filter data(with [Savitzky–Golay filter](https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter)), preprocess it, train and save pickle files with models.
 <br>After these steps you can classify car driving events from your dataset.
