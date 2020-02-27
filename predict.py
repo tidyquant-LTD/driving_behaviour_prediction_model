@@ -5,7 +5,7 @@ import os
 
 from numpy import sqrt
 from scipy.signal import savgol_filter
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 
 
 def preprocessing(args):
@@ -18,25 +18,41 @@ def preprocessing(args):
                                                 args.polyorder_accelerometer)
     data['z_accelerometer_fil'] = savgol_filter(data['z_accelerometer'].values, args.window_length_accelerometer,
                                                 args.polyorder_accelerometer)
-    data['x_gyroscope_fil'] = savgol_filter(data['x_gyroscope'].values, args.window_length_gyroscope,
-                                            args.polyorder_gyroscope)
-    data['y_gyroscope_fil'] = savgol_filter(data['y_gyroscope'].values, args.window_length_gyroscope,
-                                            args.polyorder_gyroscope)
-    data['z_gyroscope_fil'] = savgol_filter(data['z_gyroscope'].values, args.window_length_gyroscope,
-                                            args.polyorder_gyroscope)
 
     data['acceleration_fil'] = sqrt(
         data['x_accelerometer_fil'] ** 2 + data['y_accelerometer_fil'] ** 2 + data['z_accelerometer_fil'] ** 2)
 
+    if args.gyroscope_feature:
+        data['x_gyroscope_fil'] = savgol_filter(data['x_gyroscope'].values, args.window_length_gyroscope,
+                                                args.polyorder_gyroscope)
+        data['y_gyroscope_fil'] = savgol_filter(data['y_gyroscope'].values, args.window_length_gyroscope,
+                                                args.polyorder_gyroscope)
+        data['z_gyroscope_fil'] = savgol_filter(data['z_gyroscope'].values, args.window_length_gyroscope,
+                                                args.polyorder_gyroscope)
+
     # If model linear we must scale accelerometer data
     if args.model_type == "linear":
-        normalizer = StandardScaler()
-        data['x_accelerometer_fil_scaled'] = normalizer.fit_transform(data['x_accelerometer_fil'].values.reshape(-1, 1))
-        data['y_accelerometer_fil_scaled'] = normalizer.fit_transform(data['y_accelerometer_fil'].values.reshape(-1, 1))
-        data['z_accelerometer_fil_scaled'] = normalizer.fit_transform(data['z_accelerometer_fil'].values.reshape(-1, 1))
+        with open('models/x_scaler.pcl', "rb") as file:
+            x_scaler = pickle.load(file)
+
+        with open('models/y_scaler.pcl', "rb") as file:
+            y_scaler = pickle.load(file)
+
+        with open('models/z_scaler.pcl', "rb") as file:
+            z_scaler = pickle.load(file)
+
+        data['x_accelerometer_fil_scaled'] = x_scaler.transform(data['x_accelerometer_fil'].values.reshape(-1, 1))
+        data['y_accelerometer_fil_scaled'] = y_scaler.transform(data['y_accelerometer_fil'].values.reshape(-1, 1))
+        data['z_accelerometer_fil_scaled'] = z_scaler.transform(data['z_accelerometer_fil'].values.reshape(-1, 1))
         data['acceleration_fil_scaled'] = sqrt(
             data['x_accelerometer_fil_scaled'] ** 2 + data['y_accelerometer_fil_scaled'] ** 2 + data[
                 'z_accelerometer_fil_scaled'] ** 2)
+
+    if args.gyroscope_feature:
+        normalizer = MinMaxScaler()
+        data['x_gyroscope_fil_scaled'] = normalizer.fit_transform(data['x_accelerometer_fil'].values.reshape(-1, 1))
+        data['y_gyroscope_fil_scaled'] = normalizer.fit_transform(data['y_accelerometer_fil'].values.reshape(-1, 1))
+        data['z_gyroscope_fil_scaled'] = normalizer.fit_transform(data['z_accelerometer_fil'].values.reshape(-1, 1))
 
     return data
 
@@ -52,15 +68,20 @@ def predict(args):
 
     # If model linear we must use scaled accelerometer data for predicting
     # Otherwise used filtered
-    if args.model_type == "linear":
+    if args.model_type == "linear" and args.gyroscope_feature:
         data['anomalies_category'] = model.predict(data[["x_accelerometer_fil_scaled",
                                                          "y_accelerometer_fil_scaled",
                                                          "z_accelerometer_fil_scaled",
                                                          "acceleration_fil_scaled",
-                                                         "x_gyroscope_fil",
-                                                         "y_gyroscope_fil",
-                                                         "z_gyroscope_fil"]].values)
-    else:
+                                                         "x_gyroscope_fil_scaled",
+                                                         "y_gyroscope_fil_scaled",
+                                                         "z_gyroscope_fil_scaled"]].values)
+    elif args.model_type == "linear":
+        data['anomalies_category'] = model.predict(data[["x_accelerometer_fil_scaled",
+                                                         "y_accelerometer_fil_scaled",
+                                                         "z_accelerometer_fil_scaled",
+                                                         "acceleration_fil_scaled"]].values)
+    elif args.gyroscope_feature:
         data['anomalies_category'] = model.predict(data[["x_accelerometer_fil",
                                                          "y_accelerometer_fil",
                                                          "z_accelerometer_fil",
@@ -68,6 +89,11 @@ def predict(args):
                                                          "x_gyroscope_fil",
                                                          "y_gyroscope_fil",
                                                          "z_gyroscope_fil"]].values)
+    else:
+        data['anomalies_category'] = model.predict(data[["x_accelerometer_fil",
+                                                         "y_accelerometer_fil",
+                                                         "z_accelerometer_fil",
+                                                         "acceleration_fil"]].values)
 
     # Transform prediction to the readable form
     data['anomalies_category'] = encoder.inverse_transform(data['anomalies_category'].values)
@@ -95,5 +121,7 @@ if __name__ == '__main__':
                         help='Window length for filtering gyroscope values.')
     parser.add_argument('--polyorder-gyroscope', type=int, default=4,
                         help='Polyorder for filtering gyroscope values.')
+    parser.add_argument('--gyroscope-feature', type=bool, default=False,
+                        help='Adding gyroscope values as features.')
     arguments = parser.parse_args()
     predict(arguments)
