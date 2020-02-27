@@ -99,7 +99,7 @@ def predict(args):
     data['anomalies_category'] = encoder.inverse_transform(data['anomalies_category'].values)
 
     # Save prediction
-    data.to_csv(os.path.join(args.saving_path, "car_driving_anomalies.csv"), index=False)
+    data.to_csv(os.path.join(args.saving_path, f"{args.output_filename}.csv"), index=False)
     print(f"File with predict was saving in {args.saving_path}")
 
 
@@ -122,6 +122,8 @@ if __name__ == '__main__':
     parser.add_argument('--polyorder-gyroscope', type=int, default=4,
                         help='Polyorder for filtering gyroscope values.')
     parser.add_argument('--gyroscope-feature', type=bool, default=False,
+                        help='Adding gyroscope values as features.')
+    parser.add_argument('--output-filename', default="car_driving_anomalies",
                         help='Adding gyroscope values as features.')
     arguments = parser.parse_args()
     predict(arguments)
