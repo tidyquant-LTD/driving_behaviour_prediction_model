@@ -16,12 +16,14 @@ Run jupyter notebook:
 ```
 jupyter notebook
 ```
-Firstly you have to run all cells in the file ***data_accelerometer_gyroscope.ipynb***.
-<br>By running all the cells in this file you will transform data format to train the model.
-<br>After this create folder models in the root of this repository.
-<br>Then you have to run all cells in the ***driving_anomalies_clf_accelerometer_gyroscope.ipynb***.
-<br>By running all the cells in this file you will filter data(with [Savitzky–Golay filter](https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter)), preprocess it, train and save pickle files with models.
-<br>After these steps you can classify car driving events from your dataset.
+####If you want to use accelerometer data only you have to run all cells next files:
+***data_accelerometer.ipynb*** to transform data format to train the model.
+<br>***filtering_accelerometer.ipynb*** to filter accelerometer data(with [Savitzky–Golay filter](https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter)).
+<br>***train_accelerometer_only.ipynb*** to train and save models.
+####If you want to use accelerometer and gyroscope data you have to run all cells next files:
+***data_accelerometer_gyroscope.ipynb*** to transform data format to train the model.
+<br>***filtering_accelerometer_gyroscope.ipynb*** to filter accelerometer data(with [Savitzky–Golay filter](https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter)).
+<br>***train_accelerometer_gyroscope.ipynb*** to train and save models.
 
 ### 2. To make the prediction you have to run the following command:
 ```
@@ -48,5 +50,6 @@ python predict.py --model-file models/svc.pcl --file test.csv --saving-path .
 <li>polyorder-accelerometer - parameter for filtering accelerometer values.
 <li>window-length-gyroscope - parameter for filtering gyroscope values.
 <li>polyorder-gyroscope - parameter for filtering gyroscope values.
+<li>gyroscope-feature - parameter to show using of gyroscope data as features.
 
 ##### Note that default filtering parameters are relevant if you use models which were trained as described in the [first statement](#1-if-you-dont-have-trained-models-to-make-prediction-you-have-to-follow-next-points). If you use your model trained with other filtering parameters you have to set the argument values when you run the script.
