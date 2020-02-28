@@ -48,11 +48,11 @@ def preprocessing(args):
             data['x_accelerometer_fil_scaled'] ** 2 + data['y_accelerometer_fil_scaled'] ** 2 + data[
                 'z_accelerometer_fil_scaled'] ** 2)
 
-    if args.gyroscope_feature:
-        normalizer = MinMaxScaler()
-        data['x_gyroscope_fil_scaled'] = normalizer.fit_transform(data['x_accelerometer_fil'].values.reshape(-1, 1))
-        data['y_gyroscope_fil_scaled'] = normalizer.fit_transform(data['y_accelerometer_fil'].values.reshape(-1, 1))
-        data['z_gyroscope_fil_scaled'] = normalizer.fit_transform(data['z_accelerometer_fil'].values.reshape(-1, 1))
+        if args.gyroscope_feature:
+            normalizer = MinMaxScaler()
+            data['x_gyroscope_fil_scaled'] = normalizer.fit_transform(data['x_accelerometer_fil'].values.reshape(-1, 1))
+            data['y_gyroscope_fil_scaled'] = normalizer.fit_transform(data['y_accelerometer_fil'].values.reshape(-1, 1))
+            data['z_gyroscope_fil_scaled'] = normalizer.fit_transform(data['z_accelerometer_fil'].values.reshape(-1, 1))
 
     return data
 
