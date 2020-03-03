@@ -4,31 +4,37 @@ import pandas as pd
 import os
 
 from numpy import sqrt
-from scipy.signal import savgol_filter
-from sklearn.preprocessing import MinMaxScaler
+from scipy.signal import butter, lfilter
+
+
+def butter_lowpass(cutoff, fs, order=5):
+    nyq = 0.5 * fs
+    normal_cutoff = cutoff / nyq
+    b, a = butter(order, normal_cutoff, btype='low', analog=False)
+    return b, a
+
+
+def butter_lowpass_filter(data, cutoff, fs, order=5):
+    b, a = butter_lowpass(cutoff, fs, order=order)
+    y = lfilter(b, a, data)
+    return y
 
 
 def preprocessing(args):
     data = pd.read_csv(args.file)
 
     # Filter accelerometer and gyroscope values
-    data['x_accelerometer_fil'] = savgol_filter(data['x_accelerometer'].values, args.window_length_accelerometer,
-                                                args.polyorder_accelerometer)
-    data['y_accelerometer_fil'] = savgol_filter(data['y_accelerometer'].values, args.window_length_accelerometer,
-                                                args.polyorder_accelerometer)
-    data['z_accelerometer_fil'] = savgol_filter(data['z_accelerometer'].values, args.window_length_accelerometer,
-                                                args.polyorder_accelerometer)
+    data['x_accelerometer_fil'] = butter_lowpass_filter(data['x_accelerometer'].values, 2, 1000)
+    data['y_accelerometer_fil'] = butter_lowpass_filter(data['y_accelerometer'].values, 2, 1000)
+    data['z_accelerometer_fil'] = butter_lowpass_filter(data['z_accelerometer'].values, 2, 1000)
 
     data['acceleration_fil'] = sqrt(
         data['x_accelerometer_fil'] ** 2 + data['y_accelerometer_fil'] ** 2 + data['z_accelerometer_fil'] ** 2)
 
     if args.gyroscope_feature:
-        data['x_gyroscope_fil'] = savgol_filter(data['x_gyroscope'].values, args.window_length_gyroscope,
-                                                args.polyorder_gyroscope)
-        data['y_gyroscope_fil'] = savgol_filter(data['y_gyroscope'].values, args.window_length_gyroscope,
-                                                args.polyorder_gyroscope)
-        data['z_gyroscope_fil'] = savgol_filter(data['z_gyroscope'].values, args.window_length_gyroscope,
-                                                args.polyorder_gyroscope)
+        data['x_gyroscope_fil'] = butter_lowpass_filter(data['x_gyroscope'].values, 3, 1000)
+        data['y_gyroscope_fil'] = butter_lowpass_filter(data['y_gyroscope'].values, 3, 1000)
+        data['z_gyroscope_fil'] = butter_lowpass_filter(data['z_gyroscope'].values, 3, 1000)
 
     # If model linear we must scale accelerometer data
     if args.model_type == "linear":
@@ -47,12 +53,6 @@ def preprocessing(args):
         data['acceleration_fil_scaled'] = sqrt(
             data['x_accelerometer_fil_scaled'] ** 2 + data['y_accelerometer_fil_scaled'] ** 2 + data[
                 'z_accelerometer_fil_scaled'] ** 2)
-
-        if args.gyroscope_feature:
-            normalizer = MinMaxScaler()
-            data['x_gyroscope_fil_scaled'] = normalizer.fit_transform(data['x_accelerometer_fil'].values.reshape(-1, 1))
-            data['y_gyroscope_fil_scaled'] = normalizer.fit_transform(data['y_accelerometer_fil'].values.reshape(-1, 1))
-            data['z_gyroscope_fil_scaled'] = normalizer.fit_transform(data['z_accelerometer_fil'].values.reshape(-1, 1))
 
     return data
 
@@ -73,9 +73,9 @@ def predict(args):
                                                          "y_accelerometer_fil_scaled",
                                                          "z_accelerometer_fil_scaled",
                                                          "acceleration_fil_scaled",
-                                                         "x_gyroscope_fil_scaled",
-                                                         "y_gyroscope_fil_scaled",
-                                                         "z_gyroscope_fil_scaled"]].values)
+                                                         "x_gyroscope_fil",
+                                                         "y_gyroscope_fil",
+                                                         "z_gyroscope_fil"]].values)
     elif args.model_type == "linear":
         data['anomalies_category'] = model.predict(data[["x_accelerometer_fil_scaled",
                                                          "y_accelerometer_fil_scaled",
@@ -113,14 +113,6 @@ if __name__ == '__main__':
                         help='Path to the file with data.')
     parser.add_argument('--saving-path', required=True,
                         help='Path for saving file with predict.')
-    parser.add_argument('--window-length-accelerometer', type=int, default=51,
-                        help='Window length for filtering accelerometer values.')
-    parser.add_argument('--polyorder-accelerometer', type=int, default=5,
-                        help='Polyorder for filtering accelerometer values.')
-    parser.add_argument('--window-length-gyroscope', type=int, default=31,
-                        help='Window length for filtering gyroscope values.')
-    parser.add_argument('--polyorder-gyroscope', type=int, default=4,
-                        help='Polyorder for filtering gyroscope values.')
     parser.add_argument('--gyroscope-feature', type=bool, default=False,
                         help='Adding gyroscope values as features.')
     parser.add_argument('--output-filename', default="car_driving_anomalies",
