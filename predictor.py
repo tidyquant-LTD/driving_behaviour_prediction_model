@@ -29,7 +29,7 @@ class Predictor(object):
             return y_pred
 
     @staticmethod
-    def preprocess_feature(feature=None, scaler_filename=None, filtering=savgol_filter, **kwargs):
+    def preprocess_feature(feature=None, scaler_filename=None, filtering=None, **kwargs):
         """
         :param feature: feature vector which have to be preprocessed
         :param scaler_filename: filename of the stored scaler
@@ -45,7 +45,7 @@ class Predictor(object):
                 feature = scaler.transform(feature.reshape(-1, 1))
             return feature
 
-    def preprocess(self, data=None, linear=False, filtering=savgol_filter, **kwargs):
+    def preprocess(self, data=None, linear=False, filtering=None, **kwargs):
         """
         :param data: data for preprocessing
         :param linear: linear model will be used or not (if True than do scaling if scalers are saved)
