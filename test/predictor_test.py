@@ -35,7 +35,7 @@ class PredictorTest(unittest.TestCase):
 
         y_true = model.predict(data).tolist()[:10]
         y_pred = self.predictor.predict(data, linear=False, gyroscope=False,
-                                        model_filename="non-linear-accelerometer.pcl")[:10]
+                                        model_filename="non-linear-accelerometer.pcl", features="simple")[:10]
 
         self.assertListEqual(y_true, y_pred)
 
@@ -93,8 +93,6 @@ class PredictorTest(unittest.TestCase):
         data_new = pd.DataFrame()
         for column in data.columns:
             data_new[column] = savgol_filter(data[column], window_length=window_length, polyorder=polyorder)
-        data_new['acceleration'] = np.sqrt(
-            data_new['x_accelerometer'] ** 2 + data_new['y_accelerometer'] ** 2 + data_new['z_accelerometer'] ** 2)
 
         true_values = data_new.loc[0].values.tolist()
 
@@ -117,8 +115,6 @@ class PredictorTest(unittest.TestCase):
             with open(os.path.join("..", "models", f"{column}.pcl"), "rb") as file:
                 scaler = pickle.load(file)
             data_new[column] = scaler.transform(data_new[column].values.reshape(-1, 1))
-        data_new['acceleration'] = np.sqrt(
-            data_new['x_accelerometer'] ** 2 + data_new['y_accelerometer'] ** 2 + data_new['z_accelerometer'] ** 2)
 
         true_values = data_new.loc[0].values.tolist()
 
@@ -138,8 +134,6 @@ class PredictorTest(unittest.TestCase):
         data_new = pd.DataFrame()
         for column in data.columns:
             data_new[column] = savgol_filter(data[column], window_length=window_length, polyorder=polyorder)
-        data_new['acceleration'] = np.sqrt(
-            data_new['x_accelerometer'] ** 2 + data_new['y_accelerometer'] ** 2 + data_new['z_accelerometer'] ** 2)
 
         true_values = data_new.loc[0].values.tolist()
 
@@ -162,6 +156,7 @@ class PredictorTest(unittest.TestCase):
             data_new['x_accelerometer'] ** 2 + data_new['y_accelerometer'] ** 2 + data_new['z_accelerometer'] ** 2)
         y_true = model.predict(data_new).tolist()[:10]
         y_pred = self.predictor.predict(data, linear=False, model_filename="non-linear-accelerometer.pcl",
+                                        features="simple",
                                         filtering=savgol_filter,
                                         window_length=window_length, polyorder=polyorder)[:10]
 
@@ -189,6 +184,7 @@ class PredictorTest(unittest.TestCase):
 
         y_true = model.predict(data_new).tolist()[:50]
         y_pred = self.predictor.predict(data, linear=True, model_filename="linear-accelerometer.pcl",
+                                        features="simple",
                                         filtering=savgol_filter,
                                         window_length=window_length, polyorder=polyorder)[:50]
 
@@ -212,6 +208,7 @@ class PredictorTest(unittest.TestCase):
 
         y_true = model.predict(data_new).tolist()[:10]
         y_pred = self.predictor.predict(data, linear=False, model_filename="non-linear-accelerometer-gyroscope.pcl",
+                                        features="simple",
                                         filtering=savgol_filter,
                                         window_length=window_length, polyorder=polyorder)[:10]
 
@@ -240,6 +237,7 @@ class PredictorTest(unittest.TestCase):
 
         y_true = model.predict(data_new).tolist()[:50]
         y_pred = self.predictor.predict(data, linear=True, model_filename="linear-accelerometer-gyroscope.pcl",
+                                        features="simple",
                                         filtering=savgol_filter,
                                         window_length=window_length, polyorder=polyorder)[:50]
 
@@ -253,6 +251,57 @@ class PredictorTest(unittest.TestCase):
             model = pickle.load(file)
 
         y_true = model.predict(data).tolist()[:10]
-        y_pred = self.predictor.predict(data, model_filename="non-linear-accelerometer-features.pcl")[:10]
+        y_pred = self.predictor.predict(data, model_filename="non-linear-accelerometer-features.pcl", features="article")[:10]
 
         self.assertListEqual(y_true, y_pred)
+
+    def test_predict_and_save_method(self):
+        self.predictor.predict_and_save()
+
+    def test_predict_and_save_method_with_data(self):
+        data = pd.read_csv(os.path.join("..", "data", "train_accelerometer.csv"))
+        data = data.drop(['event'], axis=1)
+
+        self.predictor.predict_and_save(data=data)
+
+    def test_predict_and_save_method_with_all_arguments_for_predict(self):
+        data = pd.read_csv(os.path.join("..", "data", "train_accelerometer.csv"))
+        data = data.drop(['event'], axis=1)
+
+        self.predictor.predict_and_save(data=data, linear=True, model_filename="linear-accelerometer.pcl",
+                                        features="simple", filtering=savgol_filter, window_length=51, polyorder=5)
+
+    def test_predict_and_save_method_with_all_arguments_for_predict_and_saving_path(self):
+        data = pd.read_csv(os.path.join("..", "data", "train_accelerometer.csv"))
+        data = data.drop(['event'], axis=1)
+        saving_path = "result.csv"
+
+        self.predictor.predict_and_save(data=data, saving_path=saving_path, linear=True,
+                                        model_filename="linear-accelerometer.pcl", features="simple",
+                                        filtering=savgol_filter, window_length=51, polyorder=5)
+        if os.path.exists(saving_path):
+            os.remove(saving_path)
+
+    def test_save_file_with_predict(self):
+        data = pd.read_csv(os.path.join("..", "data", "train_accelerometer.csv"))
+        data = data.drop(['event'], axis=1)
+
+        with open(os.path.join("..", "models", "non-linear-accelerometer.pcl"), "rb") as file:
+            model = pickle.load(file)
+
+        data['acceleration'] = np.sqrt(
+            data['x_accelerometer'] ** 2 + data['y_accelerometer'] ** 2 + data['z_accelerometer'] ** 2)
+        y_true = model.predict(data).tolist()[:10]
+        saving_filename = "test_file"
+        saving_path = os.path.join("..", "data", f"{saving_filename}.csv")
+
+        self.predictor.predict_and_save(data=data, saving_path=saving_path, linear=True,
+                                        model_filename="non-linear-accelerometer.pcl",
+                                        features="simple", filtering=None)
+
+        data = pd.read_csv(saving_path)
+        y_pred = data["anomalies_category"].tolist()[:10]
+
+        self.assertListEqual(y_true, y_pred)
+        if os.path.exists(saving_path):
+            os.remove(saving_path)

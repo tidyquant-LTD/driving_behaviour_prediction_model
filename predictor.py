@@ -11,7 +11,7 @@ class Predictor(object):
     Class for predicting.
     """
 
-    def predict(self, data=None, linear=True, model_filename="linear-accelerometer.pcl", filtering=None, **kwargs):
+    def predict(self, data=None, linear=True, model_filename="linear-accelerometer.pcl", features="simple", filtering=None, **kwargs):
         """
         :param data: data on which predict
         :param linear: linear model will be used or not (if True than do scaling if models are saved)
@@ -25,6 +25,9 @@ class Predictor(object):
                 model = pickle.load(file)
             if filtering is not None:
                 data = self.preprocess(data, linear=linear, filtering=filtering, **kwargs)
+            if features == "simple":
+                data['acceleration'] = np.sqrt(
+                    data['x_accelerometer'] ** 2 + data['y_accelerometer'] ** 2 + data['z_accelerometer'] ** 2)
             y_pred = model.predict(data).tolist()
             return y_pred
 
@@ -67,6 +70,11 @@ class Predictor(object):
             else:
                 for column in data.columns:
                     data_new[column] = self.preprocess_feature(feature=data[column], filtering=filtering, **kwargs)
-            data_new['acceleration'] = np.sqrt(
-                data_new['x_accelerometer'] ** 2 + data_new['y_accelerometer'] ** 2 + data_new['z_accelerometer'] ** 2)
             return data_new
+
+    def predict_and_save(self, data=None, saving_path=None, linear=True,
+                         model_filename="linear-accelerometer.pcl", filtering=None, **kwargs):
+        if data is not None and saving_path is not None:
+            data['anomalies_category'] = self.predict(data=data, linear=linear, model_filename=model_filename,
+                                                      filtering=filtering, **kwargs)
+            data.to_csv(saving_path, index=False)
