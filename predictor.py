@@ -11,7 +11,7 @@ class Predictor(object):
     Class for predicting.
     """
 
-    def predict(self, data=None, linear=True, model_filename="svc.pcl", filtering=None, **kwargs):
+    def predict(self, data=None, linear=True, model_filename="linear-accelerometer.pcl", filtering=None, **kwargs):
         """
         :param data: data on which predict
         :param linear: linear model will be used or not (if True than do scaling if models are saved)

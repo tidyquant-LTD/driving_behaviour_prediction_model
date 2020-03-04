@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import pandas as pd
 import pickle
 import unittest
@@ -24,17 +25,17 @@ class PredictorTest(unittest.TestCase):
         self.predictor.predict(features_type="simple")
 
     def test_predict_method_return_value(self):
-        data = pd.read_csv("../data/train_filtered_accelerometer.csv")
+        data = pd.read_csv(os.path.join("..", "data", "train_filtered_accelerometer.csv"))
         data['acceleration'] = np.sqrt(
             data['x_accelerometer'] ** 2 + data['y_accelerometer'] ** 2 + data['z_accelerometer'] ** 2)
-        data = data.drop(['x_accelerometer', 'y_accelerometer', 'z_accelerometer', 'event'], axis=1)
+        data = data.drop(['event'], axis=1)
 
-        with open("../models/lightgbm.pcl", "rb") as file:
+        with open(os.path.join("..", "models", "non-linear-accelerometer.pcl"), "rb") as file:
             model = pickle.load(file)
 
         y_true = model.predict(data).tolist()[:10]
-        y_pred = self.predictor.predict(data, linear=False, features_type="simple", gyroscope=False,
-                                        model_filename="lightgbm.pcl")[:10]
+        y_pred = self.predictor.predict(data, linear=False, gyroscope=False,
+                                        model_filename="non-linear-accelerometer.pcl")[:10]
 
         self.assertListEqual(y_true, y_pred)
 
@@ -59,7 +60,7 @@ class PredictorTest(unittest.TestCase):
         self.predictor.preprocess_feature(linear=True)
 
     def test_preprocess_feature_method_with_checking_model_type(self):
-        with open("../models/x_accelerometer.pcl", "rb") as file:
+        with open(os.path.join("..", "models", "x_accelerometer.pcl"), "rb") as file:
             scaler = pickle.load(file)
         window_length = 51
         polyorder = 5
@@ -79,7 +80,7 @@ class PredictorTest(unittest.TestCase):
         self.predictor.preprocess()
 
     def test_preprocess_method_with_filtering(self):
-        data = pd.read_csv("../data/train_accelerometer.csv")
+        data = pd.read_csv(os.path.join("..", "data", "train_accelerometer.csv"))
         data = data.drop(['event'], axis=1)
 
         window_length = 51
@@ -100,7 +101,7 @@ class PredictorTest(unittest.TestCase):
         self.assertListEqual(true_values, result)
 
     def test_preprocess_method_with_filtering_and_scaling(self):
-        data = pd.read_csv("../data/train_accelerometer.csv")
+        data = pd.read_csv(os.path.join("..", "data", "train_accelerometer.csv"))
         data = data.drop(['event'], axis=1)
 
         window_length = 51
@@ -113,7 +114,7 @@ class PredictorTest(unittest.TestCase):
         data_new = pd.DataFrame()
         for column in sorted(data.columns):
             data_new[column] = savgol_filter(data[column], window_length=window_length, polyorder=polyorder)
-            with open(f"../models/{column}.pcl", "rb") as file:
+            with open(os.path.join("..", "models", f"{column}.pcl"), "rb") as file:
                 scaler = pickle.load(file)
             data_new[column] = scaler.transform(data_new[column].values.reshape(-1, 1))
         data_new['acceleration'] = np.sqrt(
@@ -124,7 +125,7 @@ class PredictorTest(unittest.TestCase):
         self.assertListEqual(true_values, result)
 
     def test_preprocess_method_with_gyroscope(self):
-        data = pd.read_csv("../data/train_accelerometer_gyroscope.csv")
+        data = pd.read_csv(os.path.join("..", "data", "train_accelerometer_gyroscope.csv"))
         data = data.drop(['event'], axis=1)
 
         window_length = 51
@@ -145,42 +146,41 @@ class PredictorTest(unittest.TestCase):
         self.assertListEqual(true_values, result)
 
     def test_predict_method_with_preprocess_filtering(self):
-        data = pd.read_csv("../data/train_accelerometer.csv")
+        data = pd.read_csv(os.path.join("..", "data", "train_accelerometer.csv"))
         data = data.drop(['event'], axis=1)
 
         window_length = 51
         polyorder = 5
 
-        with open("../models/svc.pcl", "rb") as file:
+        with open(os.path.join("..", "models", "non-linear-accelerometer.pcl"), "rb") as file:
             model = pickle.load(file)
-
         data_new = pd.DataFrame()
         for column in data.columns:
             data_new[column] = savgol_filter(data[column], window_length=window_length, polyorder=polyorder)
 
         data_new['acceleration'] = np.sqrt(
             data_new['x_accelerometer'] ** 2 + data_new['y_accelerometer'] ** 2 + data_new['z_accelerometer'] ** 2)
-
         y_true = model.predict(data_new).tolist()[:10]
-        y_pred = self.predictor.predict(data, model_filename="svc.pcl", filtering=savgol_filter,
+        y_pred = self.predictor.predict(data, linear=False, model_filename="non-linear-accelerometer.pcl",
+                                        filtering=savgol_filter,
                                         window_length=window_length, polyorder=polyorder)[:10]
 
         self.assertListEqual(y_true, y_pred)
 
     def test_predict_method_with_preprocess_filtering_and_scaling(self):
-        data = pd.read_csv("../data/train_accelerometer.csv")
+        data = pd.read_csv(os.path.join("..", "data", "train_accelerometer.csv"))
         data = data.drop(['event'], axis=1)
 
         window_length = 51
         polyorder = 5
 
-        with open("../models/svc.pcl", "rb") as file:
+        with open(os.path.join("..", "models", "linear-accelerometer.pcl"), "rb") as file:
             model = pickle.load(file)
 
         data_new = pd.DataFrame()
         for column in data.columns:
             data_new[column] = savgol_filter(data[column], window_length=window_length, polyorder=polyorder)
-            with open(f"../models/{column}.pcl", "rb") as file:
+            with open(os.path.join("..", "models", f"{column}.pcl"), "rb") as file:
                 scaler = pickle.load(file)
             data_new[column] = scaler.transform(data_new[column].values.reshape(-1, 1))
 
@@ -188,13 +188,14 @@ class PredictorTest(unittest.TestCase):
             data_new['x_accelerometer'] ** 2 + data_new['y_accelerometer'] ** 2 + data_new['z_accelerometer'] ** 2)
 
         y_true = model.predict(data_new).tolist()[:50]
-        y_pred = self.predictor.predict(data, linear=True, model_filename="svc.pcl", filtering=savgol_filter,
+        y_pred = self.predictor.predict(data, linear=True, model_filename="linear-accelerometer.pcl",
+                                        filtering=savgol_filter,
                                         window_length=window_length, polyorder=polyorder)[:50]
 
         self.assertListEqual(y_true, y_pred)
 
     def test_predict_method_with_gyroscope(self):
-        data = pd.read_csv("../data/train_accelerometer_gyroscope.csv")
+        data = pd.read_csv(os.path.join("..", "data", "train_accelerometer_gyroscope.csv"))
         data = data.drop(['event'], axis=1)
 
         window_length = 51
@@ -206,23 +207,52 @@ class PredictorTest(unittest.TestCase):
         data_new['acceleration'] = np.sqrt(
             data_new['x_accelerometer'] ** 2 + data_new['y_accelerometer'] ** 2 + data_new['z_accelerometer'] ** 2)
 
-        with open("../models/svc_gyroscope.pcl", "rb") as file:
+        with open(os.path.join("..", "models", "non-linear-accelerometer-gyroscope.pcl"), "rb") as file:
             model = pickle.load(file)
 
         y_true = model.predict(data_new).tolist()[:10]
-        y_pred = self.predictor.predict(data, linear=False, model_filename="svc_gyroscope.pcl", filtering=savgol_filter,
+        y_pred = self.predictor.predict(data, linear=False, model_filename="non-linear-accelerometer-gyroscope.pcl",
+                                        filtering=savgol_filter,
                                         window_length=window_length, polyorder=polyorder)[:10]
 
         self.assertListEqual(y_true, y_pred)
 
-    def test_predict_method_check_feature_type(self):
-        data = pd.read_csv("../data/train_accelerometer_features.csv")
+    def test_predict_method_with_gyroscope_preprocess_filtering_and_scaling(self):
+        data = pd.read_csv(os.path.join("..", "data", "train_accelerometer_gyroscope.csv"))
         data = data.drop(['event'], axis=1)
 
-        with open("../models/GRB_features.pcl", "rb") as file:
+        window_length = 51
+        polyorder = 5
+
+        with open(os.path.join("..", "models", "linear-accelerometer-gyroscope.pcl"), "rb") as file:
+            model = pickle.load(file)
+
+        data_new = pd.DataFrame()
+        for column in data.columns:
+            data_new[column] = savgol_filter(data[column], window_length=window_length, polyorder=polyorder)
+            if os.path.exists(os.path.join("..", "models", f"{column}.pcl")):
+                with open(os.path.join("..", "models", f"{column}.pcl"), "rb") as file:
+                    scaler = pickle.load(file)
+                data_new[column] = scaler.transform(data_new[column].values.reshape(-1, 1))
+
+        data_new['acceleration'] = np.sqrt(
+            data_new['x_accelerometer'] ** 2 + data_new['y_accelerometer'] ** 2 + data_new['z_accelerometer'] ** 2)
+
+        y_true = model.predict(data_new).tolist()[:50]
+        y_pred = self.predictor.predict(data, linear=True, model_filename="linear-accelerometer-gyroscope.pcl",
+                                        filtering=savgol_filter,
+                                        window_length=window_length, polyorder=polyorder)[:50]
+
+        self.assertListEqual(y_true, y_pred)
+
+    def test_predict_method_check_feature_type(self):
+        data = pd.read_csv(os.path.join("..", "data", "train_accelerometer_features.csv"))
+        data = data.drop(['event'], axis=1)
+
+        with open(os.path.join("..", "models", "non-linear-accelerometer-features.pcl"), "rb") as file:
             model = pickle.load(file)
 
         y_true = model.predict(data).tolist()[:10]
-        y_pred = self.predictor.predict(data, model_filename="GRB_features.pcl")[:10]
+        y_pred = self.predictor.predict(data, model_filename="non-linear-accelerometer-features.pcl")[:10]
 
         self.assertListEqual(y_true, y_pred)
