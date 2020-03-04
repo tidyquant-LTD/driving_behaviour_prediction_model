@@ -47,3 +47,7 @@ Also you can pass all parameters for filtering function after parameter "filteri
 Note, that article approach doesn't imply filtering, because it must be done during features creation.
 """
 result = predictor.predict(data=data, linear=True, model_filename="linear-accelerometer.pcl", features="simple", filtering=savgol_filter, window_length=51, polyorder=5)
+"""
+predict method return only predicted values, where 0 - critical event, 1 - negligible event and 2 - significant event
+predict_and_save method make prediction and save file by path you set in saving_path parameters
+"""
