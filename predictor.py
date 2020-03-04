@@ -21,7 +21,7 @@ class Predictor(object):
         :return: prediction on the data
         """
         if data is not None:
-            with open(os.path.join("..", "models", model_filename), "rb") as file:
+            with open(os.path.join("models", model_filename), "rb") as file:
                 model = pickle.load(file)
             if filtering is not None:
                 data = self.preprocess(data, linear=linear, filtering=filtering, **kwargs)
@@ -43,7 +43,7 @@ class Predictor(object):
         if feature is not None:
             feature = filtering(feature, **kwargs)
             if scaler_filename is not None:
-                with open(os.path.join("..", "models", scaler_filename), "rb") as file:
+                with open(os.path.join("models", scaler_filename), "rb") as file:
                     scaler = pickle.load(file)
                 feature = scaler.transform(feature.reshape(-1, 1))
             return feature
@@ -61,8 +61,8 @@ class Predictor(object):
             if linear:
                 for column in data.columns:
                     # If linear models will be used look for scalers which were saved.
-                    if os.path.exists(os.path.join("..", "models", f"{column}.pcl")):
-                        scaler_filename = os.path.join("..", "models", f"{column}.pcl")
+                    if os.path.exists(os.path.join("models", f"{column}.pcl")):
+                        scaler_filename = os.path.join("models", f"{column}.pcl")
                     else:
                         scaler_filename = None
                     data_new[column] = self.preprocess_feature(feature=data[column], scaler_filename=scaler_filename,
