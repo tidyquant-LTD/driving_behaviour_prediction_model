@@ -72,6 +72,15 @@ class Predictor(object):
 
     def predict_and_save(self, data=None, saving_path=None, linear=True,
                          model_filename="linear-accelerometer.pcl", filtering=None, **kwargs):
+        """
+        :param data: data on which predict
+        :param saving_path: path where saving file
+        :param linear: linear model will be used or not (if True than do scaling if models are saved)
+        :param model_filename: filename of the model (model have to be saved in the roor in "models" folder)
+        :param filtering: filtering method
+        :param kwargs: arguments for filtering
+        Save file with prediction.
+        """
         if data is not None and saving_path is not None:
             data_new = data.copy()
             data_new['anomalies_category'] = self.predict(data=data, linear=linear, model_filename=model_filename,
