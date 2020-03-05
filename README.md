@@ -16,40 +16,30 @@ Run jupyter notebook:
 ```
 jupyter notebook
 ```
-####If you want to use accelerometer data only you have to run all cells next files:
+####If you want to use accelerometer data only you have to run all cells in next files:
 ***data_accelerometer.ipynb*** to transform data format to train the model.
 <br>***filtering_accelerometer.ipynb*** to filter accelerometer data(with [Savitzky–Golay filter](https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter)).
 <br>***train_accelerometer_only.ipynb*** to train and save models.
-####If you want to use accelerometer and gyroscope data you have to run all cells next files:
+####If you want to use accelerometer and gyroscope data you have to run all cells in next files:
 ***data_accelerometer_gyroscope.ipynb*** to transform data format to train the model.
 <br>***filtering_accelerometer_gyroscope.ipynb*** to filter accelerometer data(with [Savitzky–Golay filter](https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter)).
 <br>***train_accelerometer_gyroscope.ipynb*** to train and save models.
-
-### 2. To make the prediction you have to run the following command:
+####If you want to use accelerometer data with approach described in the [article](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0174959) you have to run all cells in next files:
+***data_accelerometer_features.ipynb*** to transform data format to train the model.
+<br>***train_accelerometer_only_features.ipynb*** to train and save models.
+####If you want to use accelerometer and gyroscope data with approach described in the [article](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0174959) you have to run all cells in next files:
+***data_accelerometer_gyroscope_features.ipynb*** to transform data format to train the model.
+<br>***train_accelerometer_gyroscope_features.ipynb*** to train and save models.
+##### Models will be saved after training(you can change the models you want to save or their names in the last cells for prediction files). Scalers and encoder will also be saved, these attributes will be used for prediction in future.
+### 2. Example for making a prediction is in the ***example.py*** file. Also this file contains description of Predictor class parameters and features needed to be used by a certain model.
+Note that each model works with its own set of features and if the file which you are loading contains a less or a bigger number of features, this will cause an error.
+### 3. You can run tests for Predictor class with the following command:
 ```
-python predict.py --model-file models/svc.pcl --file test.csv --saving-path .
+python -m unittest tests.py
 ```
-#### Script has a few required parameters:
-<li>model-file - path to the model (model must be saved in the pickle file).
-<li>saving-path - path where csv-file with prediction should be saved.
-<li>file - csv-file with data for predicting. Data should contain 6 columns: 
-
-| column_name     | description                   | type  |
-| ----------------|:-----------------------------:| -----:|
-| x_accelerometer | accelerometer value by x-axis | float |
-| y_accelerometer | accelerometer value by y-axis | float |
-| z_accelerometer | accelerometer value by z-axis | float |
-| x_gyroscope     | gyroscope value by x-axis     | float |
-| y_gyroscope     | gyroscope value by y-axis     | float |
-| z_gyroscope     | gyroscope value by z-axis     | float |
-  
-#### Parameters which you can change:
-
-<li>model-type - type of the model. This argument is used for special preprocessing: for linear models accelerometer features will be normalized. By default the argument is linear. If you want to <b><i>use non-linear model</i></b> you have to <b><i>set model-type argument as non-linear</i></b>.
-<li>window-length-accelerometer - parameter for filtering accelerometer values.
-<li>polyorder-accelerometer - parameter for filtering accelerometer values.
-<li>window-length-gyroscope - parameter for filtering gyroscope values.
-<li>polyorder-gyroscope - parameter for filtering gyroscope values.
-<li>gyroscope-feature - parameter to show using of gyroscope data as features.
-
-##### Note that default filtering parameters are relevant if you use models which were trained as described in the [first statement](#1-if-you-dont-have-trained-models-to-make-prediction-you-have-to-follow-next-points). If you use your model trained with other filtering parameters you have to set the argument values when you run the script.
+Tests can be run only after running all cells in all files mentioned in [Statement #1](#1-if-you-dont-have-trained-models-to-make-prediction-you-have-to-follow-next-points), because there will be a usability test of models which work with any set of features.
+### 4. The repository has files which we used for visualization and analysis of the results, to work with the test data.
+***confidence_matrix.ipynb*** to analyzing models result with confidence matrix, recall and precision scores.
+<br>***predict_visualization.ipynb*** to visualizate predicted result on map.
+<br>***test_predict.py*** to predict on test data with all models an save results.
+<br>***test_data_transform.py*** to transform test data format to train the model.
