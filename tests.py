@@ -13,18 +13,39 @@ class PredictorTests(unittest.TestCase):
         self.predictor = Predictor()
 
     def test_create_predictor(self):
+        """
+        Test if predictor class exists.
+        """
         self.assertIsNotNone(self.predictor)
 
     def test_predict_method(self):
+        """
+        Test if predict method of predictor class exists.
+        """
         self.predictor.predict()
 
     def test_predict_method_with_model_type(self):
+        """
+        Test if predict method had parameter which is responsible for the model type.
+        """
         self.predictor.predict(linear=True)
 
     def test_predict_method_with_features_type(self):
+        """
+        Test if predict method had parameter which is responsible for the features type.
+        """
         self.predictor.predict(features_type="simple")
 
+    def test_predict_method_with_model(self):
+        """
+        Test if predict method had parameter which is responsible for the file with model.
+        """
+        self.predictor.predict(model_filename="non-linear-accelerometer.pcl")
+
     def test_predict_method_return_value(self):
+        """
+        Test if predict method had parameter which is responsible for the model type.
+        """
         data = pd.read_csv(os.path.join("data", "train_filtered_accelerometer.csv"))
         data['acceleration'] = np.sqrt(
             data['x_accelerometer'] ** 2 + data['y_accelerometer'] ** 2 + data['z_accelerometer'] ** 2)
@@ -34,18 +55,28 @@ class PredictorTests(unittest.TestCase):
             model = pickle.load(file)
 
         y_true = model.predict(data).tolist()[:10]
-        y_pred = self.predictor.predict(data, linear=False, gyroscope=False,
-                                        model_filename="non-linear-accelerometer.pcl", features="simple")[:10]
+        y_pred = self.predictor.predict(data, linear=False, model_filename="non-linear-accelerometer.pcl",
+                                        features="simple")[:10]
 
         self.assertListEqual(y_true, y_pred)
 
     def test_preprocess_feature_method(self):
+        """
+        Test if preprocess_feature method of predictor class exists.
+        """
         self.predictor.preprocess_feature()
 
     def test_preprocess_feature_method_with_filtering_and_parameters(self):
+        """
+        Test if preprocess_feature method had parameters
+        which are responsible for the filtering and filtering parameters.
+        """
         self.predictor.preprocess_feature(filtering=savgol_filter, window_length=51, polyorder=5)
 
     def test_preprocess_feature_method_with_filtering_and_parameters_returned_value(self):
+        """
+        Test if preprocess_feature method with passed filtering and filtering parameters work correctly.
+        """
         window_length = 51
         polyorder = 5
         x = np.random.uniform(-1, 0, 100)
@@ -57,9 +88,15 @@ class PredictorTests(unittest.TestCase):
         self.assertListEqual(filtered, filtered_with_predictor)
 
     def test_preprocess_feature_method_with_model_type(self):
+        """
+        Test if preprocess_feature method had parameters which are responsible for the model type.
+        """
         self.predictor.preprocess_feature(linear=True)
 
     def test_preprocess_feature_method_with_checking_model_type(self):
+        """
+        Test if preprocess_feature method with passed model type works correctly.
+        """
         path_to_the_scaler = os.path.join("models", "x_accelerometer.pcl")
         with open(path_to_the_scaler, "rb") as file:
             scaler = pickle.load(file)
@@ -78,9 +115,15 @@ class PredictorTests(unittest.TestCase):
         self.assertListEqual(scaled, scaled_with_predictor)
 
     def test_preprocess_method(self):
+        """
+        Test if preprocess method of predictor class exists.
+        """
         self.predictor.preprocess()
 
-    def test_preprocess_method_with_filtering(self):
+    def test_preprocess_method_with_parameters(self):
+        """
+        Test if preprocess method with passed parameters works correctly.
+        """
         data = pd.read_csv(os.path.join("data", "train_accelerometer.csv"))
         data = data.drop(['event'], axis=1)
 
@@ -100,6 +143,9 @@ class PredictorTests(unittest.TestCase):
         self.assertListEqual(true_values, result)
 
     def test_preprocess_method_with_filtering_and_scaling(self):
+        """
+        Test if preprocess method makes scaling of features.
+        """
         data = pd.read_csv(os.path.join("data", "train_accelerometer.csv"))
         data = data.drop(['event'], axis=1)
 
@@ -122,6 +168,9 @@ class PredictorTests(unittest.TestCase):
         self.assertListEqual(true_values, result)
 
     def test_preprocess_method_with_gyroscope(self):
+        """
+        Test if preprocess method works with gyroscope features.
+        """
         data = pd.read_csv(os.path.join("data", "train_accelerometer_gyroscope.csv"))
         data = data.drop(['event'], axis=1)
 
@@ -141,6 +190,9 @@ class PredictorTests(unittest.TestCase):
         self.assertListEqual(true_values, result)
 
     def test_predict_method_with_preprocess_filtering(self):
+        """
+        Test if predict method makes preprocessing.
+        """
         data = pd.read_csv(os.path.join("data", "train_accelerometer.csv"))
         data = data.drop(['event'], axis=1)
 
@@ -164,6 +216,9 @@ class PredictorTests(unittest.TestCase):
         self.assertListEqual(y_true, y_pred)
 
     def test_predict_method_with_preprocess_filtering_and_scaling(self):
+        """
+        Test if predict method makes preprocessing with the passed parameters.
+        """
         data = pd.read_csv(os.path.join("data", "train_accelerometer.csv"))
         data = data.drop(['event'], axis=1)
 
@@ -191,7 +246,10 @@ class PredictorTests(unittest.TestCase):
 
         self.assertListEqual(y_true, y_pred)
 
-    def test_predict_method_with_gyroscope(self):
+    def test_predict_method_with_gyroscope_and_filtering(self):
+        """
+        Test if predict method works with gyroscope features and makes filtering.
+        """
         data = pd.read_csv(os.path.join("data", "train_accelerometer_gyroscope.csv"))
         data = data.drop(['event'], axis=1)
 
@@ -216,6 +274,9 @@ class PredictorTests(unittest.TestCase):
         self.assertListEqual(y_true, y_pred)
 
     def test_predict_method_with_gyroscope_preprocess_filtering_and_scaling(self):
+        """
+        Test if predict method with gyroscope features makes filtering and scaling.
+        """
         data = pd.read_csv(os.path.join("data", "train_accelerometer_gyroscope.csv"))
         data = data.drop(['event'], axis=1)
 
@@ -245,6 +306,9 @@ class PredictorTests(unittest.TestCase):
         self.assertListEqual(y_true, y_pred)
 
     def test_predict_method_check_feature_type(self):
+        """
+        Test if predict method checks features type.
+        """
         data = pd.read_csv(os.path.join("data", "train_accelerometer_features.csv"))
         data = data.drop(['event'], axis=1)
 
@@ -252,20 +316,31 @@ class PredictorTests(unittest.TestCase):
             model = pickle.load(file)
 
         y_true = model.predict(data).tolist()[:10]
-        y_pred = self.predictor.predict(data, model_filename="non-linear-accelerometer-features.pcl", features="article")[:10]
+        y_pred = self.predictor.predict(data, model_filename="non-linear-accelerometer-features.pcl",
+                                        features="article")[:10]
 
         self.assertListEqual(y_true, y_pred)
 
     def test_predict_and_save_method(self):
+        """
+        Test if predict_and_save method of predictor class exists.
+        """
         self.predictor.predict_and_save()
 
     def test_predict_and_save_method_with_data(self):
+        """
+        Test if predict_and_save method has the parameter responsible for data.
+        """
         data = pd.read_csv(os.path.join("data", "train_accelerometer.csv"))
         data = data.drop(['event'], axis=1)
 
         self.predictor.predict_and_save(data=data)
 
     def test_predict_and_save_method_with_all_arguments_for_predict(self):
+        """
+        Test if predict_and_save method has the parameter responsible for model type, file with model, features type,
+        filtering and parameters for filtering.
+        """
         data = pd.read_csv(os.path.join("data", "train_accelerometer.csv"))
         data = data.drop(['event'], axis=1)
 
@@ -273,6 +348,9 @@ class PredictorTests(unittest.TestCase):
                                         features="simple", filtering=savgol_filter, window_length=51, polyorder=5)
 
     def test_predict_and_save_method_with_all_arguments_for_predict_and_saving_path(self):
+        """
+        Test if predict_and_save class saves to a certain path.
+        """
         data = pd.read_csv(os.path.join("data", "train_accelerometer.csv"))
         data = data.drop(['event'], axis=1)
         saving_path = "result.csv"
@@ -284,6 +362,9 @@ class PredictorTests(unittest.TestCase):
             os.remove(saving_path)
 
     def test_save_file_with_predict(self):
+        """
+        Test if predict_and_save class predicts correctly.
+        """
         data = pd.read_csv(os.path.join("data", "train_accelerometer.csv"))
         data = data.drop(['event'], axis=1)
 
